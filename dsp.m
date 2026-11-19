@@ -1,70 +1,122 @@
-% Exp 1: Signal Generation
-clear; clc; close all;
-t = -1:0.001:1; n = -5:5; m = -10:10; f = 5; A = 2;
-if ~exist('square', 'file'), square = @(th) sign(sin(th)); end
-if ~exist('sawtooth', 'file'), sawtooth = @(th, w) 2*(mod(th/(2*pi), 1) - 0.5); end
-if ~exist('sinc', 'file'), sinc = @(x) sin(pi*(x + (x==0)*eps))./(pi*(x + (x==0)*eps)); end
-T = {t,t,t,t,t,t,0:0.1:1,-5:0.001:5};
-X = {double(t==0),double(t>=0),square(2*pi*f*t),sawtooth(2*pi*f*t),A*sawtooth(2*pi*f*t,0.25),sin(2*pi*f*t),0:2:20,sinc(-5:0.001:5)};
-name = {'Unit impulse','Unit step','Square wave','Sawtooth wave','Triangular wave','Sinusoidal wave','Ramp signal','Sinc function'};
-figure;
-for i = 1:8
-    subplot(4,2,i); plot(T{i},X{i}); title(name{i});
-    xlabel('Time'); ylabel('Amplitude'); grid on;
+% Exp 1: Generation of continuous-time and discrete-time signals
+clc; clear; close all;
+t = -1:0.001:1;
+n = -5:1:5;
+nd = -10:1:10;
+x_imp = double(t == 0);
+n_imp = -5:1:5;
+x_imp_d = double(n_imp == 0);
+x_step = double(t >= 0);
+x_step_d = double(n >= 0);
+f = 5;
+x_sq = square(2*pi*f*t);
+x_sq_d = square(2*pi*f*n);
+x_saw = sawtooth(2*pi*f*t);
+x_saw_d = sawtooth(pi*n/2);
+A = 2;
+x_tri = A*sawtooth(2*pi*5*t,0.25);
+x_tri_d = A*sawtooth(pi*nd/4,0.5);
+x_sin = sin(2*pi*f*t);
+x_sin_d = sin(pi*nd/4);
+t_ramp = 0:0.1:1;
+x_ramp = zeros(size(t_ramp));
+for i = 2:length(t_ramp)
+    x_ramp(i) = x_ramp(i-1) + 2;
 end
-N = {n,n,n,n,m,m,0:10,m};
-Y = {double(n==0),double(n>=0),square(2*pi*f*n),sawtooth(pi*n/2),A*sawtooth(pi*m/4,0.5),sin(pi*m/4),0:2:20,sinc(m/2)};
-figure;
-for i = 1:8
-    subplot(4,2,i); stem(N{i},Y{i},'filled'); title(name{i});
-    xlabel('Time'); ylabel('Amplitude'); grid on;
+n_ramp = 0:10;
+x_ramp_d = zeros(size(n_ramp));
+for i = 2:length(n_ramp)
+    x_ramp_d(i) = x_ramp_d(i-1) + 2;
 end
-
-% Exp 2: Magnitude and Phase Response of First-Order System
-clear; clc; close all;
-a = 0.5;
-omega = linspace(0,4*pi,1000);
-real_part = 1-a*cos(omega);
-img = a*sin(omega);
-magnitude = abs(1./sqrt(1+a^2 - 2*a*cos(omega)));
-phase_radian = -atan2(img,real_part);
-phase_degrees = phase_radian*(180/pi);
+t_sinc = -5:0.001:5;
+x_sinc = sinc(t_sinc);
+x_sinc_d = sinc(nd/2);
 figure;
-subplot(2,1,1); plot(omega,magnitude); xlabel('Frequency'); ylabel('Magnitude'); grid on;
-subplot(2,1,2); plot(omega,phase_degrees); xlabel('Frequency'); ylabel('Phase'); grid on;
-
-% Exp 3: Linear and Cross Convolution
-clear; clc; close all;
-x = [3 55 2]; h = [1 2];
-l_x = length(x); l_h = length(h);
-N = l_x + l_h - 1;
-y_linear = zeros(1,N);
-for n = 0:N-1
-    for k = 0:n
-        if (k+1<=l_x) && (n-k+1<=l_h)
-            y_linear(n+1) = y_linear(n+1) + x(k+1)*h(n-k+1);
-        end
-    end
-end
-disp('Result of Linear Convolution:'); disp(y_linear);
-
-h_flip = h(end:-1:1);
-y_cross = zeros(1,N);
-for n = 0:N-1
-    for k = 0:n
-        if (k+1<=l_x) && (n-k+1<=l_h)
-            y_cross(n+1) = y_cross(n+1) + x(k+1)*h_flip(n-k+1);
-        end
-    end
-end
-disp('Result of Cross Convolution:'); disp(y_cross);
+subplot(4,2,1); plot(t,x_imp,'r'); title('Continuous unit impulse'); xlabel('Time'); ylabel('Amplitude');
+subplot(4,2,2); plot(t,x_step,'r'); title('Continuous unit step'); xlabel('Time'); ylabel('Amplitude');
+subplot(4,2,3); plot(t,x_sq,'r'); title('Continuous square wave'); xlabel('Time'); ylabel('Amplitude');
+subplot(4,2,4); plot(t,x_saw,'r'); title('Continuous sawtooth wave'); xlabel('Time'); ylabel('Amplitude');
+subplot(4,2,5); plot(t,x_tri,'r'); title('Continuous triangular wave'); xlabel('Time'); ylabel('Amplitude');
+subplot(4,2,6); plot(t,x_sin,'r'); title('Continuous sinusoidal wave'); xlabel('Time'); ylabel('Amplitude');
+subplot(4,2,7); plot(t_ramp,x_ramp,'r'); title('Continuous ramp signal'); xlabel('Time'); ylabel('Amplitude');
+subplot(4,2,8); plot(t_sinc,x_sinc,'r'); title('Continuous sinc function'); xlabel('Time'); ylabel('Amplitude');
 figure;
-subplot(2,1,1); stem(0:N-1,y_linear,'filled'); title('Linear Convolution'); xlabel('n'); ylabel('Amplitude'); grid on;
-subplot(2,1,2); stem(0:N-1,y_cross,'filled'); title('Cross Convolution'); xlabel('n'); ylabel('Amplitude'); grid on;
+subplot(4,2,1); stem(n_imp,x_imp_d,'filled'); title('Discrete unit impulse'); xlabel('n'); ylabel('Amplitude');
+subplot(4,2,2); stem(n,x_step_d,'filled'); title('Discrete unit step'); xlabel('n'); ylabel('Amplitude');
+subplot(4,2,3); stem(n,x_sq_d,'filled'); title('Discrete square wave'); xlabel('n'); ylabel('Amplitude');
+subplot(4,2,4); stem(n,x_saw_d,'filled'); title('Discrete sawtooth wave'); xlabel('n'); ylabel('Amplitude');
+subplot(4,2,5); stem(nd,x_tri_d,'filled'); title('Discrete triangular wave'); xlabel('n'); ylabel('Amplitude');
+subplot(4,2,6); stem(nd,x_sin_d,'filled'); title('Discrete sinusoidal wave'); xlabel('n'); ylabel('Amplitude');
+subplot(4,2,7); stem(n_ramp,x_ramp_d,'filled'); title('Discrete ramp signal'); xlabel('n'); ylabel('Amplitude');
+subplot(4,2,8); stem(nd,x_sinc_d,'filled'); title('Discrete sinc function'); xlabel('n'); ylabel('Amplitude');
 
-% Exp 4: DFT and IDFT
-clear; clc; close all;
+% Exp 2: Basic operations on discrete-time signals
+clc; clear; close all;
+n = -4:4;
+x1 = [0 1 2 3 4 5 6 7 8];
+x2 = [2 3 4 5 6 7 0 0 1];
+k = 2;
+y_add = x1 + x2;
+y_sub = x1 - x2;
+y_mul = x1 .* x2;
+A1 = 2;
+A2 = 0.5;
+x1_a_s = A1*x1;
+x2_a_s = A2*x2;
+x1_a_shift = x1 + k;
+x2_a_shift = x2 + k;
+x1_delayed = [zeros(1,k) x1(1:end-k)];
+x1_advanced = [x1(k+1:end) zeros(1,k)];
+figure;
+subplot(3,2,1); stem(n,x1,'filled'); hold on; stem(n,x2,'r'); stem(n,y_add,'g'); title('Addition'); xlabel('n'); ylabel('Amplitude'); legend('x1','x2','x1+x2'); grid on;
+subplot(3,2,2); stem(n,x1,'filled'); hold on; stem(n,x2,'r'); stem(n,y_sub,'g'); title('Subtraction'); xlabel('n'); ylabel('Amplitude'); legend('x1','x2','x1-x2'); grid on;
+subplot(3,2,3); stem(n,x1,'filled'); hold on; stem(n,x2,'r'); stem(n,y_mul,'g'); title('Multiplication'); xlabel('n'); ylabel('Amplitude'); legend('x1','x2','x1.*x2'); grid on;
+subplot(3,2,4); stem(n,x1_a_s,'filled'); hold on; stem(n,x2_a_s,'r'); title('Amplitude scaling'); xlabel('n'); ylabel('Amplitude'); legend('2*x1','0.5*x2'); grid on;
+subplot(3,2,5); stem(n,x1_a_shift,'filled'); hold on; stem(n,x2_a_shift,'r'); title('Amplitude shifting'); xlabel('n'); ylabel('Amplitude'); legend('x1+2','x2+2'); grid on;
+subplot(3,2,6); stem(n,x1,'filled'); hold on; stem(n,x1_delayed,'r'); stem(n,x1_advanced,'g'); title('Time delay and advance'); xlabel('n'); ylabel('Amplitude'); legend('x1','delayed','advanced'); grid on;
+disp('Addition:'); disp(y_add);
+disp('Subtraction:'); disp(y_sub);
+disp('Multiplication:'); disp(y_mul);
+disp('Amplitude scaled x1:'); disp(x1_a_s);
+disp('Amplitude scaled x2:'); disp(x2_a_s);
+disp('Amplitude shifted x1:'); disp(x1_a_shift);
+disp('Amplitude shifted x2:'); disp(x2_a_shift);
+disp('Delayed x1:'); disp(x1_delayed);
+disp('Advanced x1:'); disp(x1_advanced);
+
+% Exp 3: Linear convolution and cross-correlation
+clc; clear; close all;
 x = [1 2 3 4];
+h = [6 7 8];
+lx = length(x);
+lh = length(h);
+N = lx + lh - 1;
+y = zeros(1,N);
+for n = 0:N-1
+    for k = 0:lx-1
+        if (n-k >= 0) && (n-k < lh)
+            y(n+1) = y(n+1) + x(k+1)*h(n-k+1);
+        end
+    end
+end
+h_flip = fliplr(h);
+r = zeros(1,N);
+for n = 0:N-1
+    for k = 0:lx-1
+        if (n-k >= 0) && (n-k < lh)
+            r(n+1) = r(n+1) + x(k+1)*h_flip(n-k+1);
+        end
+    end
+end
+disp('Linear convolution result:'); disp(y);
+disp('Cross-correlation result (x * h[-n]):'); disp(r);
+figure;
+subplot(2,1,1); stem(0:N-1,y,'filled'); title('Linear convolution result'); xlabel('n'); ylabel('Amplitude'); grid on;
+subplot(2,1,2); stem(0:N-1,r,'filled'); title('Cross-correlation result'); xlabel('n'); ylabel('Amplitude'); grid on;
+
+% Exp 4: DFT and IDFT using direct computation
+clc; clear; close all;
+x = [1 2 3 1];
 N = length(x);
 X = zeros(1,N);
 for k = 0:N-1
@@ -72,189 +124,162 @@ for k = 0:N-1
         X(k+1) = X(k+1) + x(n+1)*exp(-1j*2*pi*n*k/N);
     end
 end
-disp('DFT of x:'); disp(X);
-figure;
-subplot(3,1,1); stem(0:N-1,x,'filled'); title('Original Sequence'); xlabel('n'); ylabel('x(n)'); grid on;
-subplot(3,1,2); stem(0:N-1,abs(X),'filled'); title('Magnitude of DFT'); xlabel('k'); ylabel('|X(k)|'); grid on;
-subplot(3,1,3); stem(0:N-1,angle(X),'filled'); title('Phase of DFT'); xlabel('k'); ylabel('Angle (radians)'); grid on;
-
-x_idft = zeros(1,N);
+disp('DFT of x(n):'); disp(X);
+x_reconstructed = zeros(1,N);
 for n = 0:N-1
     for k = 0:N-1
-        x_idft(n+1) = x_idft(n+1) + X(k+1)*exp(1j*2*pi*n*k/N);
+        x_reconstructed(n+1) = x_reconstructed(n+1) + X(k+1)*exp(1j*2*pi*n*k/N);
     end
-    x_idft(n+1) = x_idft(n+1)/N;
+    x_reconstructed(n+1) = x_reconstructed(n+1)/N;
 end
-disp('Reconstructed sequence using IDFT:'); disp(real(x_idft));
-
-% Exp 5: 8-Point Radix-2 DIT-FFT
-clear; clc; close all;
-seq = [1 4 3 2 0 0 0 0];
-if length(seq) < 8
-    seq = [seq, zeros(1, 8-length(seq))];
-end
-tw2 = 1;
-tw4_0 = 1; tw4_1 = -1i;
-tw8_0 = 1; tw8_1 = (1/sqrt(2)) - 1i*(1/sqrt(2)); tw8_2 = -1i; tw8_3 = -(1/sqrt(2)) - 1i*(1/sqrt(2));
-
-v11(1) = seq(1) + tw2*seq(5); v11(2) = seq(1) - tw2*seq(5);
-v12(1) = seq(3) + tw2*seq(7); v12(2) = seq(3) - tw2*seq(7);
-v21(1) = seq(2) + tw2*seq(6); v21(2) = seq(2) - tw2*seq(6);
-v22(1) = seq(4) + tw2*seq(8); v22(2) = seq(4) - tw2*seq(8);
-
-f1(1) = v11(1) + tw4_0*v12(1); f1(2) = v11(2) + tw4_1*v12(2);
-f1(3) = v11(1) - tw4_0*v12(1); f1(4) = v11(2) - tw4_1*v12(2);
-f2(1) = v21(1) + tw4_0*v22(1); f2(2) = v21(2) + tw4_1*v22(2);
-f2(3) = v21(1) - tw4_0*v22(1); f2(4) = v21(2) - tw4_1*v22(2);
-
-mOut(1) = f1(1) + tw8_0*f2(1); mOut(2) = f1(2) + tw8_1*f2(2);
-mOut(3) = f1(3) + tw8_2*f2(3); mOut(4) = f1(4) + tw8_3*f2(4);
-mOut(5) = f1(1) - tw8_0*f2(1); mOut(6) = f1(2) - tw8_1*f2(2);
-mOut(7) = f1(3) - tw8_2*f2(3); mOut(8) = f1(4) - tw8_3*f2(4);
-
-disp('8-point FFT is:'); disp(mOut);
+disp('IDFT / reconstructed sequence:'); disp(real(x_reconstructed));
 figure;
-subplot(2,1,1); stem(0:7,seq(1:8),'filled'); title('Input sequence'); xlabel('n'); ylabel('Amplitude'); grid on;
-subplot(2,1,2); stem(0:7,abs(mOut),'filled'); title('Magnitude of 8-point FFT'); xlabel('k'); ylabel('|X(k)|'); grid on;
+subplot(3,1,1); stem(0:N-1,x,'filled'); title('Input signal x[n]'); xlabel('n'); ylabel('Amplitude'); grid on;
+subplot(3,1,2); stem(0:N-1,abs(X),'filled'); title('DFT magnitude |X[k]|'); xlabel('k'); ylabel('Magnitude'); grid on;
+subplot(3,1,3); stem(0:N-1,angle(X),'filled'); title('Angle of X[k]'); xlabel('k'); ylabel('Phase (rad)'); grid on;
 
-% Exp 6: Verification of Convolution Theorem
-clear; clc; close all;
-x = [1 2 3 4]; h = [1 -1 1];
-Lx = length(x); Lh = length(h);
-N = Lx + Lh - 1;
-
-y_time = zeros(1,N);
+% Exp 5: 8-point radix-2 DIT-FFT
+clc; clear; close all;
+x = [1 4 3 2 0 0 0 0];
+N = length(x);
+L = log2(N);
+x_br = zeros(1,N);
 for n = 0:N-1
-    sum_val = 0;
-    for m = 0:Lx-1
-        idx_h = n-m;
-        if idx_h >= 0 && idx_h < Lh
-            sum_val = sum_val + x(m+1)*h(idx_h+1);
+    temp = n;
+    rev = 0;
+    for b = 1:L
+        rev = 2*rev + mod(temp,2);
+        temp = floor(temp/2);
+    end
+    x_br(rev+1) = x(n+1);
+end
+X = x_br;
+for stage = 1:L
+    m = 2^stage;
+    half = m/2;
+    Wm = exp(-1j*2*pi/m);
+    for first = 1:m:N
+        for j = 0:half-1
+            u = X(first+j);
+            v = X(first+j+half)*(Wm^j);
+            X(first+j) = u + v;
+            X(first+j+half) = u - v;
         end
     end
-    y_time(n+1) = sum_val;
 end
+disp('The 8-point DFT of the given input sequence X(k):'); disp(X);
+figure;
+subplot(2,1,1); stem(0:N-1,x,'filled'); title('Input sequence x[n]'); xlabel('n'); ylabel('Amplitude'); grid on;
+subplot(2,1,2); stem(0:N-1,abs(X),'filled'); title('Magnitude of 8-point DFT'); xlabel('k'); ylabel('|X[k]|'); grid on;
 
-X = zeros(1,N); H = zeros(1,N);
-for k = 0:N-1
-    sum_x = 0; sum_h = 0;
-    for n = 0:N-1
-        if n < Lx, sum_x = sum_x + x(n+1)*exp(-1i*2*pi*k*n/N); end
-        if n < Lh, sum_h = sum_h + h(n+1)*exp(-1i*2*pi*k*n/N); end
-    end
-    X(k+1) = sum_x; H(k+1) = sum_h;
-end
-
+% Exp 6: Verification of the convolution theorem
+clc; clear; close all;
+x = [1 2 3 4];
+h = [1 -1 1];
+y_time = conv(x,h);
+N = length(x) + length(h) - 1;
+x_pad = [x zeros(1,N-length(x))];
+h_pad = [h zeros(1,N-length(h))];
+X = fft(x_pad,N);
+H = fft(h_pad,N);
 Y_freq = X .* H;
-
-y_freq = zeros(1,N);
-for n = 0:N-1
-    acc = 0;
-    for k = 0:N-1
-        acc = acc + Y_freq(k+1)*exp(1i*2*pi*k*n/N);
-    end
-    y_freq(n+1) = acc/N;
-end
-
+y_freq = ifft(Y_freq,N);
 disp('Time-domain convolution result:'); disp(y_time);
-disp('Frequency-domain (IDFT of product) result:'); disp(real(y_freq));
-if max(abs(real(y_freq)-y_time)) < 1e-10
-    fprintf('Verification passed: Results are identical.\n');
+disp('Frequency-domain IDFT of product:'); disp(real(y_freq));
+if max(abs(y_time-real(y_freq))) < 1e-10
+    disp('Verification passed: Results are identical.');
 else
-    fprintf('Verification failed: Results differ.\n');
+    disp('Verification failed: Results differ.');
 end
 figure;
 stem(0:N-1,y_time,'filled'); hold on;
-plot(0:N-1,real(y_freq),'r--x','LineWidth',1.2);
-title('Convolution Theorem Verification'); xlabel('n'); ylabel('Amplitude');
-legend('Time-domain convolution','IDFT of DFT Product'); grid on;
+plot(0:N-1,real(y_freq),'r--x');
+title('Convolution theorem verification'); xlabel('n'); ylabel('Amplitude');
+legend('Time-domain convolution','IFFT(FFT(x).*FFT(h))'); grid on;
 
-% Exp 7: Butterworth Low-Pass IIR Filter
-clear; clc; close all;
-Fs = 10000; Fc = 3000; orders = [4,7,9]; Wn = Fc/(Fs/2);
+% Exp 7: FIR low-pass filter using window techniques
+clc; clear; close all;
+n = 25;
+wc = 0.5*pi;
+w = 0:0.01:pi;
+b = fir1(n,wc/pi,hamming(n+1));
+H = freqz(b,1,w);
+plot(w/pi,abs(H),'m'); hold on;
+b = fir1(n,wc/pi,boxcar(n+1));
+H = freqz(b,1,w);
+plot(w/pi,abs(H),'g+');
+b = fir1(n,wc/pi,bartlett(n+1));
+H = freqz(b,1,w);
+plot(w/pi,abs(H),'r.');
+b = fir1(n,wc/pi,blackman(n+1));
+H = freqz(b,1,w);
+plot(w/pi,abs(H),'c');
+b = fir1(n,wc/pi,hanning(n+1));
+H = freqz(b,1,w);
+plot(w/pi,abs(H),'b--');
+xlabel('Normalized Frequency');
+ylabel('|H(w)|');
+title('FIR low-pass filter using window techniques');
+grid on;
+legend('Hamming','Boxcar','Bartlett','Blackman','Hanning');
+
+% Exp 8: Butterworth low-pass IIR filter
+clc; clear; close all;
+Fs = 10000;
+Fc = 3000;
+orders = [4 7 9];
+Wn = Fc/(Fs/2);
 figure;
 subplot(2,1,1); hold on; grid on;
-title('Butterworth low pass IIR filter (magnitude response)');
-xlabel('frequency (Hz)'); ylabel('magnitude'); ylim([-0.5 1.5]);
+title('Butterworth LPF IIR (magnitude response)');
+xlabel('Frequency (Hz)'); ylabel('Magnitude'); ylim([-0.5 1.5]);
 subplot(2,1,2); hold on; grid on;
-title('Butterworth low pass IIR filter (magnitude response in db)');
-xlabel('frequency (Hz)'); ylabel('magnitude in db'); ylim([-60 10]);
-
+title('Butterworth LPF IIR (magnitude response in dB)');
+xlabel('Frequency (Hz)'); ylabel('Magnitude (dB)'); ylim([-80 20]);
 for n = orders
-    [b,a] = butter(n,Wn);
-    [H,f] = freqz(b,a,2048,Fs);
-    subplot(2,1,1); plot(f,abs(H),'DisplayName',['order ' num2str(n)]);
-    subplot(2,1,2); plot(f,20*log10(abs(H)),'DisplayName',['order ' num2str(n)]);
+    [b,a] = butter(n,Wn,'low');
+    [H,f] = freqz(b,a,100,Fs);
+    subplot(2,1,1); plot(f,abs(H));
+    subplot(2,1,2); plot(f,20*log10(abs(H)));
 end
-subplot(2,1,1); legend('show','Location','northeast');
-subplot(2,1,2); legend('show','Location','northeast');
+subplot(2,1,1); legend('Order 4','Order 7','Order 9');
+subplot(2,1,2); legend('Order 4','Order 7','Order 9');
 
-% Exp 8: FIR Filter Using Window Techniques
-clear; clc; close all;
-% Part A - Comparison of Different Windows
-wc = 0.5*pi; n = 25; w = 0:0.01:pi;
-f_hamm = fir1(n,wc/pi,hamming(n+1)); h_hamm = freqz(f_hamm,1,w);
-f_box = fir1(n,wc/pi,boxcar(n+1)); h_box = freqz(f_box,1,w);
-f_bart = fir1(n,wc/pi,bartlett(n+1)); h_bart = freqz(f_bart,1,w);
-f_black = fir1(n,wc/pi,blackman(n+1)); h_black = freqz(f_black,1,w);
-
-figure;
-plot(w/pi,abs(h_hamm),'r'); hold on;
-plot(w/pi,abs(h_box),'b');
-plot(w/pi,abs(h_bart),'g');
-plot(w/pi,abs(h_black),'m');
-xlabel('Normalized Frequency'); ylabel('Magnitude'); title('FIR Filter (Different Windows)');
-legend('Hamming','Boxcar','Bartlett','Blackman'); grid on;
-
-% Part B - Comparison of Filter Orders
-n1 = 5; n2 = 25; n3 = 50;
-f_1 = fir1(n1,wc/pi,hamming(n1+1)); h_1 = freqz(f_1,1,w);
-f_2 = fir1(n2,wc/pi,hamming(n2+1)); h_2 = freqz(f_2,1,w);
-f_3 = fir1(n3,wc/pi,hamming(n3+1)); h_3 = freqz(f_3,1,w);
-
-figure;
-plot(w/pi,abs(h_1),'r'); hold on;
-plot(w/pi,abs(h_2),'b');
-plot(w/pi,abs(h_3),'g');
-xlabel('Normalized Frequency'); ylabel('Magnitude'); title('FIR Filter (Different Orders)');
-legend('5','25','50'); grid on;
-
-% Exp 9: Generation and Repetition of ECG Signal
-clear; clc; close all;
-t = 0:0.0005:1;
-if ~exist('sawtooth', 'file'), sawtooth = @(th) 2*(mod(th/(2*pi), 1) - 0.5); end
+% Exp 9: ECG signal generation for biomedical signal processing
+clc; clear; close all;
+t = 0:0.005:1;
 p_wave = 0.2*sin(2*pi*5*(t-0.05)).*(t>=0.05 & t<=0.15);
-qrs_wave = 1.2*sawtooth(2*pi*20*(t-0.3)).*(t>=0.3 & t<=0.35);
+qrs_wave = -1.2*sawtooth(2*pi*20*(t-0.3)).*(t>=0.3 & t<=0.35);
 t_wave = 0.5*sin(2*pi*5*(t-0.6)).*(t>=0.6 & t<=0.7);
-ecg_signal = p_wave + qrs_wave + t_wave;
-ecg_signal_repeated = repmat(ecg_signal,1,5);
-t_repeated = linspace(0,5,length(ecg_signal_repeated));
-figure('Position',[100,100,1200,400]);
-plot(t_repeated,ecg_signal_repeated,'b','LineWidth',1.2);
-xlabel('Time (s)'); ylabel('Amplitude'); title('Repeated ECG Signal'); grid on;
-
-% Exp 10: Generation of Musical Tune and Frequency-Domain Analysis
-clear; clc; close all;
-Fs = 44100; Tnote = 0.45; Tgap = 0.08; A = 0.8;
-t = 0:1/Fs:Tnote-1/Fs;
-Saa = 240; Re = 270; Ga = 300; Ma = 320;
-sequence = [Saa Saa Re Re Ga Ga Ma Ma];
-melody = [];
-for frequency = sequence
-    note = A*sin(2*pi*frequency*t);
-    gap = zeros(1,round(Tgap*Fs));
-    melody = [melody note gap];
-end
-t_melody = (0:length(melody)-1)/Fs;
-Saa_tone = A*sin(2*pi*Saa*t);
-N = length(Saa_tone);
-Saa_fft = fft(Saa_tone);
-Saa_mag = abs(Saa_fft)/N;
-Saa_mag_half = Saa_mag(1:floor(N/2)+1);
-Saa_mag_half(2:end-1) = 2*Saa_mag_half(2:end-1);
-f = Fs*(0:floor(N/2))/N;
-
+ecgSignal = p_wave + qrs_wave + t_wave;
 figure;
-subplot(3,1,1); plot(t_melody,melody,'b'); xlabel('Time (s)'); ylabel('Amplitude'); title('Full Melody - Time Domain'); grid on;
-subplot(3,1,2); plot(t,Saa_tone,'k'); xlabel('Time (s)'); ylabel('Amplitude'); title('Saa Tone - Time Domain'); grid on; xlim([0 0.5]);
-subplot(3,1,3); plot(f,Saa_mag_half,'r','LineWidth',1.5); xlim([0 1000]); xlabel('Frequency (Hz)'); ylabel('Magnitude'); title('Saa Tone - Frequency Domain'); grid on;
+plot(t,ecgSignal); grid on;
+xlabel('Time (s)'); ylabel('Amplitude'); title('One ECG Cycle');
+ecg_signal_repeated = repmat(ecgSignal,1,5);
+t_repeated = linspace(0,5,length(ecg_signal_repeated));
+figure('Position',[100 100 1200 400]);
+plot(t_repeated,ecg_signal_repeated); grid on;
+xlabel('Time (s)'); ylabel('Amplitude'); title('ECG Signal');
+
+% Exp 10: Musical audio tone generation - Saa Saa Re Re Ga Ga Ma Ma
+clc; clear; close all;
+Fs = 44100;
+notes = [240 240 270 270 300 300 320 320];
+duration = 0.5;
+t = 0:1/Fs:duration;
+tone_sequence = [];
+for i = 1:length(notes)
+    tone = 0.5*sin(2*pi*notes(i)*t);
+    tone_sequence = [tone_sequence tone];
+end
+sound(tone_sequence,Fs);
+total_time = (0:length(tone_sequence)-1)/Fs;
+figure;
+plot(total_time,tone_sequence,'LineWidth',1.1);
+xlabel('Time (seconds)'); ylabel('Amplitude');
+title('Musical Tone Sequence: Saa Saa Re Re Ga Ga Ma Ma');
+zoom_samples = 1:round(Fs*0.01);
+figure;
+plot(total_time(zoom_samples),tone_sequence(zoom_samples),'LineWidth',1.2);
+xlabel('Time'); ylabel('Amplitude');
+title('Zoomed View of Single Tone Generation');
